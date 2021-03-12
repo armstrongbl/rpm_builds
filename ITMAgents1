@@ -1,0 +1,68 @@
+#!/bin/sh
+
+CANDLEHOME="/opt/ibm/apm/agent"
+export CANDLEHOME
+
+PID_FILE=/opt/ibm/apm/agent/tmp/lzagent.pid
+start_all()
+{
+touch /var/lock/subsys/ITMAgents1 2> /dev/null
+#itmcmd agent start lz
+/usr/bin/su - root -c "/bin/sh -c '/opt/ibm/apm/agent/bin/os-agent.sh start  >/dev/null 2>&1'"
+echo $(ps -ef |grep klzagent |grep -v grep | awk '{print $2}') > $PID_FILE
+}
+
+stop_all()
+{
+rm -f /var/lock/subsys/ITMAgents1 2> /dev/null
+/usr/bin/su - root -c "/bin/sh -c '/opt/ibm/apm/agent/bin/os-agent.sh stop  >/dev/null 3>&1'"
+rm -rf $PID_FILE
+}
+
+status_os()
+{
+if pgrep -x "klzagent" > /dev/null
+ then
+	echo "Running"
+	exit 0
+else 
+	echo "Not Running"  
+	exit 1		
+fi
+}
+
+PATH="${CANDLEHOME}/bin:/bin:/usr/bin:$PATH"                              
+export PATH                                                              
+TEXTDOMAINDIR="${CANDLEHOME}/config/nls/msg"                              
+export TEXTDOMAINDIR                                                      
+
+set +e
+
+case "$1" in
+   "start"|"inetd")                                                       
+      start_all                                                           
+      ;;                                                                  
+   "stop")                                                                
+      stop_all                                                            
+      ;;                                                                  
+   "restart")                                                             
+      stop_all                                                            
+      start_all                                                           
+      ;;                                                                  
+   "status")
+      status_os
+      ;;
+   "stop_msg")                                                            
+      #$NLS-E$ "Stopping the IBM/Tivoli Monitoring agents"
+      nls_replace 'KCI0002I'
+      ;;
+   "start_msg")                                                           
+      #$NLS-E$ "Starting the IBM/Tivoli Monitoring agents"
+      nls_replace 'KCI0003I'
+      ;;
+   *)
+      #$NLS-E$ "Syntax: $1 start|stop|restart|status|start_msg|stop_msg"         
+      nls_replace 'KCI0004E' "$0"                                         
+esac
+
+exit 0                                                                    
