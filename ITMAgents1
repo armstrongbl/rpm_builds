@@ -1,5 +1,11 @@
 #!/bin/sh
 
+### BEGIN INIT INFO
+# chkconfig: 2345 99 10
+# description: IBM Tivoli Monitoring
+### END INIT INFO
+
+
 CANDLEHOME="/opt/ibm/apm/agent"
 export CANDLEHOME
 
